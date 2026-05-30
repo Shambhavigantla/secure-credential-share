@@ -1,6 +1,9 @@
-# Secure Credential Sharing Platform
+# 🔐 Secure Credential Sharing Platform
 
-A production-grade platform for issuing, managing, and selectively disclosing digital credentials with cryptographic verification.
+A **production-grade** platform for issuing, managing, and selectively disclosing digital credentials with **cryptographic verification**. Users can share only the information they choose while maintaining mathematical proof of authenticity.
+
+**🚀 Live Demo:** https://secure-credential-share.vercel.app  
+**👤 Face Authentication:** https://secure-credential-share.vercel.app/auth/face-verify
 
 ## 🎯 Key Features
 
@@ -30,49 +33,111 @@ A production-grade platform for issuing, managing, and selectively disclosing di
 
 ### Tech Stack
 - **Frontend**: Next.js 16, React 19, TypeScript, Tailwind CSS, Lucide Icons
-- **Backend**: Next.js API Routes, Node.js
-- **Database**: MongoDB with Mongoose
-- **Cryptography**: @noble/hashes, @noble/ed25519
-- **Utilities**: jsonwebtoken, bcryptjs, qrcode, uuid, axios
+- **Backend**: Next.js App Router, Node.js 22
+- **Database**: MongoDB 9.6.3 with Mongoose
+- **Cryptography**: @noble/ed25519, @noble/hashes
+- **Authentication**: jsonwebtoken, bcryptjs
+- **Utilities**: qrcode, uuid, axios, zod
 
-### Project Structure
+### Project File Structure
+
 ```
 secure-credential-share/
-│   ├── app/
-│   │   ├── api/                          # Backend API routes
-│   │   │   ├── auth/
-│   │   │   │   ├── register/route.ts
-│   │   │   │   ├── login/route.ts
-│   │   │   │   └── logout/route.ts
-│   │   │   └── credentials/
-│   │   │       ├── route.ts              # GET /api/credentials (list user's creds)
-│   │   │       ├── [id]/route.ts         # GET /api/credentials/:id
-│   │   │       ├── issue/route.ts        # POST /api/credentials/issue
-│   │   │       ├── share/route.ts        # POST /api/credentials/share (create disclosure)
-│   │   │       └── verify/route.ts       # POST /api/credentials/verify (public)
-│   │   ├── login/page.tsx                # Login page
-│   │   ├── register/page.tsx             # Registration page
-│   │   ├── dashboard/
-│   │   │   ├── page.tsx                  # Dashboard (list credentials)
-│   │   │   ├── issue/page.tsx            # Issue new credential
-│   │   │   └── share/[id]/page.tsx       # Selective disclosure UI
-│   │   └── verify/page.tsx               # Public verification page
-│   ├── lib/
-│   │   ├── db.ts                         # MongoDB connection
-│   │   ├── middleware.ts                 # JWT auth & rate limiting
-│   │   ├── validation.ts                 # Zod schemas & input sanitization
-│   │   ├── selective-disclosure.ts       # Core cryptographic logic ⭐
-│   │   ├── merkle.ts                     # Merkle tree operations
-│   │   └── crypto/                       # Cryptographic utilities
-│   │       ├── merkle.ts
-│   │       └── signing.ts
-│   └── models/
-│       ├── User.ts                       # User schema
-│       └── Credential.ts                 # Credential schema
-├── .env.local.example                    # Environment template
-├── package.json
-├── tsconfig.json
-└── README.md
+├── app/                                   # Next.js App Router (Frontend + API)
+│   ├── api/                              # 🔌 Backend API Routes
+│   │   ├── auth/                         # Authentication endpoints
+│   │   │   ├── register/route.ts         # POST /api/auth/register
+│   │   │   ├── login/route.ts            # POST /api/auth/login
+│   │   │   ├── logout/route.ts           # POST /api/auth/logout
+│   │   │   └── face-verify/route.ts      # POST /api/auth/face-verify (NEW)
+│   │   └── credentials/                  # Credential management endpoints
+│   │       ├── route.ts                  # GET /api/credentials (list user's)
+│   │       ├── [id]/route.ts             # GET /api/credentials/[id] (get one)
+│   │       ├── issue/route.ts            # POST /api/credentials/issue
+│   │       ├── share/route.ts            # POST /api/credentials/share ⭐
+│   │       └── verify/route.ts           # POST /api/credentials/verify (public)
+│   │
+│   ├── auth/                             # 🔐 Authentication pages
+│   │   └── face-verify/page.tsx          # Face authentication UI
+│   │
+│   ├── dashboard/                        # 👤 Authenticated user pages
+│   │   ├── page.tsx                      # Dashboard (list credentials)
+│   │   ├── issue/page.tsx                # Issue credential form
+│   │   └── share/[id]/page.tsx           # Selective disclosure UI + QR
+│   │
+│   ├── login/page.tsx                    # 🔑 Login form
+│   ├── register/page.tsx                 # 📝 Registration form
+│   ├── verify/page.tsx                   # ✓ Public credential verification
+│   ├── page.tsx                          # 🏠 Landing page
+│   ├── layout.tsx                        # Root layout
+│   └── globals.css                       # Tailwind styles
+│
+├── lib/                                  # 🛠️ Utility & core logic
+│   ├── db.ts                             # MongoDB connection pooling
+│   ├── middleware.ts                     # JWT auth middleware & rate limiting
+│   ├── validation.ts                     # Zod schemas & input sanitization
+│   ├── selective-disclosure.ts           # Core cryptography ⭐⭐⭐
+│   ├── crypto/
+│   │   ├── merkle.ts                     # Merkle tree construction
+│   │   └── signing.ts                    # EdDSA signing/verification
+│   
+├── models/                               # 📊 MongoDB schemas
+│   ├── User.ts                           # User authentication schema
+│   └── Credential.ts                     # Credential storage schema
+│
+├── public/                               # Static assets
+├── .env.local                            # Environment variables (gitignored)
+├── .env.example                          # Environment template
+├── package.json                          # Dependencies & scripts
+├── tsconfig.json                         # TypeScript configuration
+├── next.config.ts                        # Next.js configuration
+├── Dockerfile                            # Docker image
+├── docker-compose.yml                    # Docker Compose
+├── README.md                             # This file
+└── CLAUDE.md                             # Development notes
+```
+
+### Core Components Interaction Flow
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        USER JOURNEY                              │
+└─────────────────────────────────────────────────────────────────┘
+
+1️⃣  REGISTRATION
+    register/page.tsx → POST /api/auth/register → User.ts (MongoDB)
+
+2️⃣  LOGIN
+    login/page.tsx → POST /api/auth/login → JWT token stored
+
+3️⃣  ISSUE CREDENTIAL
+    dashboard/issue/page.tsx 
+      → POST /api/credentials/issue
+      → selective-disclosure.ts (Merkle tree, commitments)
+      → Credential.ts (MongoDB)
+      → EdDSA signature
+
+4️⃣  SELECTIVE DISCLOSURE (Core Feature ⭐)
+    dashboard/share/[id]/page.tsx
+      → User selects fields to share
+      → POST /api/credentials/share
+      → selective-disclosure.ts creates presentation
+      → QR code generated
+      → Share token saved
+
+5️⃣  PUBLIC VERIFICATION (No Auth Required)
+    verify/page.tsx
+      → POST /api/credentials/verify
+      → Merkle proof validation
+      → EdDSA signature verification
+      → Display trust score + disclosed fields
+      → Rate limited (50 req/min)
+
+6️⃣  FACE AUTHENTICATION (NEW)
+    auth/face-verify/page.tsx
+      → Camera capture
+      → POST /api/auth/face-verify
+      → Mock Aadhaar verification
 ```
 
 ## 🚀 Quick Start
@@ -134,9 +199,11 @@ Visit http://localhost:3000
 
 ## 📚 API Documentation
 
-### Authentication Endpoints
+Organized by **file location** in `app/api/`
 
-#### Register
+### 🔑 Authentication Routes (`app/api/auth/`)
+
+#### `register/route.ts` - User Registration
 ```http
 POST /api/auth/register
 Content-Type: application/json
@@ -161,7 +228,7 @@ Content-Type: application/json
 }
 ```
 
-#### Login
+#### `login/route.ts` - User Login
 ```http
 POST /api/auth/login
 Content-Type: application/json
@@ -172,17 +239,105 @@ Content-Type: application/json
 }
 ```
 
-#### Logout
+**Response:**
+```json
+{
+  "success": true,
+  "user": {
+    "id": "user_id",
+    "name": "John Doe",
+    "email": "john@example.com"
+  },
+  "token": "jwt_token_here"
+}
+```
+
+#### `logout/route.ts` - User Logout
 ```http
 POST /api/auth/logout
 Authorization: Bearer {token}
 ```
 
+#### `face-verify/route.ts` - Face Authentication (NEW ✨)
+```http
+POST /api/auth/face-verify
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "photo": "data:image/jpeg;base64,..."
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "verified": true,
+  "matchScore": 95,
+  "aadharMasked": "XXXX-XXXX-1234"
+}
+```
+
 ---
 
-### Credential Endpoints
+### 📋 Credential Routes (`app/api/credentials/`)
 
-#### Issue New Credential
+#### `route.ts` - List User's Credentials
+```http
+GET /api/credentials
+Authorization: Bearer {token}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "credentials": [
+    {
+      "id": "cred_1",
+      "title": "Bachelor of Science",
+      "merkleRoot": "hash_value",
+      "issuedAt": "2026-05-30T10:00:00Z",
+      "expiresAt": "2027-05-30T10:00:00Z",
+      "issuerName": "University of Technology",
+      "shareCount": 2
+    }
+  ]
+}
+```
+
+#### `[id]/route.ts` - Get Single Credential
+```http
+GET /api/credentials/{id}
+Authorization: Bearer {token}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "credential": {
+    "id": "cred_1",
+    "title": "Bachelor of Science",
+    "claims": {
+      "name": "John Doe",
+      "degree": "BS Computer Science",
+      "graduationYear": "2023",
+      "cgpa": "3.8",
+      "marks": "94"
+    },
+    "merkleRoot": "hash_value",
+    "issuerName": "University of Technology",
+    "issuerPublicKey": "public_key_hex",
+    "issuerSignature": "signature_hex",
+    "issuedAt": "2026-05-30T10:00:00Z",
+    "expiresAt": "2027-05-30T10:00:00Z"
+  }
+}
+```
+
+#### `issue/route.ts` - Issue New Credential
 ```http
 POST /api/credentials/issue
 Authorization: Bearer {token}
@@ -211,45 +366,15 @@ Content-Type: application/json
     "title": "Bachelor of Science",
     "merkleRoot": "hash_value",
     "issuedAt": "2026-05-30T10:00:00Z",
-    "issuerName": "University of Technology"
+    "issuerName": "University of Technology",
+    "expiresAt": "2027-05-30T10:00:00Z"
   }
 }
 ```
 
-#### List User's Credentials
-```http
-GET /api/credentials
-Authorization: Bearer {token}
-```
+#### `share/route.ts` - Create Shareable Presentation ⭐⭐⭐
+**This is the core Selective Disclosure feature**
 
-**Response:**
-```json
-{
-  "success": true,
-  "credentials": [
-    {
-      "id": "cred_1",
-      "title": "Bachelor of Science",
-      "merkleRoot": "...",
-      "issuedAt": "2026-05-30T10:00:00Z",
-      "issuerName": "University of Technology",
-      "shareCount": 2
-    }
-  ]
-}
-```
-
-#### Get Single Credential
-```http
-GET /api/credentials/{id}
-Authorization: Bearer {token}
-```
-
----
-
-### Selective Disclosure Endpoints
-
-#### Create Shareable Presentation ⭐
 ```http
 POST /api/credentials/share
 Authorization: Bearer {token}
@@ -267,7 +392,7 @@ Content-Type: application/json
 {
   "success": true,
   "shareToken": "share_token_uuid",
-  "verifiableLink": "http://localhost:3000/verify?token=share_token_uuid",
+  "verifiableLink": "https://secure-credential-share.vercel.app/verify?token=share_token_uuid",
   "qrCode": "data:image/png;base64,...",
   "expiresAt": "2026-05-31T10:00:00Z",
   "presentation": {
@@ -279,15 +404,29 @@ Content-Type: application/json
         "value": "John Doe",
         "salt": "random_hex",
         "hash": "sha256_hash"
+      },
+      {
+        "field": "degree",
+        "value": "BS Computer Science",
+        "salt": "random_hex",
+        "hash": "sha256_hash"
+      },
+      {
+        "field": "graduationYear",
+        "value": "2023",
+        "salt": "random_hex",
+        "hash": "sha256_hash"
       }
     ],
-    "merkleRoot": "...",
-    "issuerSignature": "..."
+    "merkleRoot": "root_hash",
+    "issuerSignature": "ed25519_signature"
   }
 }
 ```
 
-#### Verify Shared Credential (Public - No Auth Required)
+#### `verify/route.ts` - Verify Shared Credential (Public - No Auth Required)
+**Rate Limited: 50 requests/minute per IP**
+
 ```http
 POST /api/credentials/verify
 Content-Type: application/json
@@ -311,13 +450,143 @@ Content-Type: application/json
   "issuerName": "University of Technology",
   "issuedAt": "2026-05-30T10:00:00Z",
   "verifiedAt": "2026-05-30T10:30:00Z",
+  "expiresAt": "2027-05-30T10:00:00Z",
   "trustScore": 100,
-  "viewCount": 5
+  "trustLevel": "VERIFIED",
+  "viewCount": 5,
+  "fieldLevelTrust": {
+    "name": {
+      "verified": true,
+      "integrityChecks": {
+        "commitmentValid": true,
+        "saltCorrect": true,
+        "hashMatches": true,
+        "merkleProofValid": true
+      },
+      "trustScore": 100
+    },
+    "degree": {
+      "verified": true,
+      "integrityChecks": {
+        "commitmentValid": true,
+        "saltCorrect": true,
+        "hashMatches": true,
+        "merkleProofValid": true
+      },
+      "trustScore": 100
+    }
+  },
+  "auditTrail": {
+    "verifiedAt": "2026-05-30T10:30:00Z",
+    "sharingDuration": "24 hours",
+    "timeRemaining": "23 hours 45 minutes",
+    "totalViews": 5,
+    "lastViewedAt": "2026-05-30T10:25:00Z"
+  }
 }
 ```
 
 ---
 
+## 🎨 Frontend Pages (`app/`)
+
+| Route | File | Purpose | Auth |
+|-------|------|---------|------|
+| `/` | `page.tsx` | Landing page with features | ❌ |
+| `/register` | `register/page.tsx` | User registration form | ❌ |
+| `/login` | `login/page.tsx` | User login form | ❌ |
+| `/dashboard` | `dashboard/page.tsx` | List user's credentials | ✅ |
+| `/dashboard/issue` | `dashboard/issue/page.tsx` | Issue new credential form | ✅ |
+| `/dashboard/share/[id]` | `dashboard/share/[id]/page.tsx` | Selective disclosure UI + QR code | ✅ |
+| `/verify` | `verify/page.tsx` | Public credential verification | ❌ |
+| `/auth/face-verify` | `auth/face-verify/page.tsx` | Face authentication (NEW) | ⚠️ * |
+
+*⚠️ Optional auth for testing
+
+---
+
+### 📊 Database Models (`lib/models/`)
+
+#### `User.ts` - User Authentication Schema
+```typescript
+{
+  _id: ObjectId
+  name: string
+  email: string (unique)
+  password: string (bcrypt hashed)
+  createdAt: Date
+  updatedAt: Date
+}
+```
+
+#### `Credential.ts` - Credential Storage Schema
+```typescript
+{
+  _id: ObjectId
+  holderId: ObjectId (references User)
+  title: string
+  claims: {
+    [fieldName]: value
+  }
+  commitments: [{
+    field: string
+    salt: string (hex)
+    hash: string (hex)
+  }]
+  merkleRoot: string (hex)
+  merkleTree: string[][] (2D array of hashes)
+  issuerName: string
+  issuerPublicKey: string (hex)
+  issuerSignature: string (hex)
+  issuedAt: Date
+  expiresAt: Date
+  shareTokens: [{
+    token: string (UUID)
+    selectedFields: string[]
+    presentationToken: string
+    expiresAt: Date
+    createdAt: Date
+    viewCount: number
+    lastViewedAt: Date
+  }]
+  revoked: boolean
+  revokedAt: Date (optional)
+  revokeReason: string (optional)
+}
+```
+
+---
+
+### 🧮 Core Cryptographic Functions (`lib/`)
+
+#### `selective-disclosure.ts` - Main Crypto Logic
+- `generateSalt()` - Generate random salt
+- `createCommitment(field, value, salt)` - Create SHA256 commitment
+- `buildMerkleTree(commitments)` - Build Merkle tree
+- `generateMerkleProof(tree, leafIndex)` - Generate proof for leaf
+- `verifyMerkleProof(leaf, proof, root)` - Verify proof
+- `createSelectivePresentation(...)` - Create verifiable presentation
+- `verifySelectivePresentation(...)` - Verify presentation
+
+#### `lib/crypto/signing.ts` - EdDSA Operations
+- `signPresentation(presentation, privateKey)` - EdDSA sign
+- `verifySignature(signature, presentation, publicKey)` - EdDSA verify
+
+#### `lib/middleware.ts` - Authentication & Rate Limiting
+- `verifyToken(token)` - JWT verification
+- `extractToken(request)` - Extract JWT from request
+- `withAuth(request, handler)` - Auth middleware
+- `withRateLimit(handler, windowMs, maxRequests)` - Rate limiting
+
+#### `lib/validation.ts` - Input Validation
+- `registerSchema` - Registration validation
+- `loginSchema` - Login validation
+- `issueCredentialSchema` - Credential issuance validation
+- `shareCredentialSchema` - Sharing validation
+- `verifyPresentationSchema` - Verification validation
+- `validate<T>()` - Generic validation helper
+- `sanitizeString()` - Input sanitization
+- `sanitizeObject()` - Recursive object sanitization
 ## 🔐 How Selective Disclosure Works
 
 ### 1. Credential Issuance
@@ -356,45 +625,6 @@ When a verifier checks the shared credential:
 ✓ **Selective Disclosure**: Unrevealed fields cannot be inferred  
 ✓ **Privacy**: Verifier never sees full credential  
 ✓ **Proof of Possession**: Holder must provide correct salts  
-
----
-
-## 📦 Deployment
-
-### Docker Deployment
-```dockerfile
-# Dockerfile
-FROM node:18-alpine
-WORKDIR /app
-
-COPY package*.json ./
-RUN npm ci --only=production
-
-COPY . .
-RUN npm run build
-
-EXPOSE 3000
-CMD ["npm", "start"]
-```
-
-```bash
-docker build -t secure-credentials .
-docker run -p 3000:3000 \
-  -e MONGODB_URI="mongodb://mongo:27017/secure-credential-share" \
-  -e JWT_SECRET="your_secret_key" \
-  secure-credentials
-```
-
-### Deployment Checklist
-- [ ] Set `NODE_ENV=production` in environment
-- [ ] Use strong, random `JWT_SECRET` (min 32 chars)
-- [ ] Configure MongoDB Atlas for production
-- [ ] Enable HTTPS/TLS
-- [ ] Set up proper error logging and monitoring
-- [ ] Configure CORS if frontend is separate
-- [ ] Set up automated backups for MongoDB
-- [ ] Enable rate limiting on all public endpoints
-- [ ] Use environment variables for all secrets
 
 ---
 
@@ -440,28 +670,10 @@ POST /api/credentials/verify
 
 ---
 
-## 🎨 Frontend Features
-
-### Holder Dashboard
-- View all issued credentials
-- Issue new credentials with dynamic fields
-- Selective field disclosure interface
-- Generate shareable links with QR codes
-- View share history and analytics
-
-### Verifier Page
-- Public verification (no login required)
-- Beautiful credential display
-- Trust score visualization
-- Field-level verification indicators
-- Issuer and timestamp validation
-
----
-
-## 📈 Bonus Features Implemented
+## 📈 Implemented Features
 
 ✅ Real EdDSA cryptography (via @noble/ed25519)  
-✅ Merkle tree-based verification  
+✅ Merkle tree-based selective disclosure  
 ✅ Time-limited share links  
 ✅ QR code generation  
 ✅ Rate limiting (50 req/min on verify)  
@@ -470,6 +682,41 @@ POST /api/credentials/verify
 ✅ Field-level trust indicators  
 ✅ View count tracking  
 ✅ Expiry date handling  
+✅ Face authentication (mock Aadhaar)  
+✅ Audit trail logging  
+✅ Docker deployment ready  
+
+---
+
+## 🚀 Deployment
+
+### Vercel (Recommended - 1 Click Deploy)
+1. Push to GitHub
+2. Connect repo to Vercel
+3. Add environment variables:
+   - `MONGODB_URI`
+   - `JWT_SECRET`
+   - `ISSUER_PRIVATE_KEY`
+   - `ISSUER_PUBLIC_KEY`
+   - `ISSUER_NAME`
+   - `NEXT_PUBLIC_APP_URL` (your Vercel domain)
+4. Deploy! ✅
+
+**Live:** https://secure-credential-share.vercel.app
+
+### Docker Deployment
+```bash
+docker build -t secure-credentials .
+docker run -p 3000:3000 \
+  -e MONGODB_URI="mongodb+srv://user:pass@cluster.mongodb.net/dbname" \
+  -e JWT_SECRET="your-secret" \
+  secure-credentials
+```
+
+### Docker Compose
+```bash
+docker-compose up -d
+```
 
 ---
 
@@ -477,43 +724,25 @@ POST /api/credentials/verify
 
 ### MongoDB Connection Error
 ```bash
-# Check MongoDB is running
-mongosh  # or mongo
-
-# Or update MONGODB_URI to use Atlas
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/dbname
+# Check credentials and IP whitelist in MongoDB Atlas
+# Or use local MongoDB:
+mongosh
 ```
 
-### Token Validation Errors
+### Token Errors
 ```bash
-# Ensure JWT_SECRET is set and consistent
-# Delete browser cookies and login again
+# Clear browser cache/cookies
+# Ensure JWT_SECRET matches across environments
 ```
 
 ### Verification Fails
 - Check share token hasn't expired
-- Verify issuer public key is configured
-- Check Merkle tree wasn't corrupted
+- Verify issuer public key is set correctly
+- Check Merkle tree hasn't been corrupted
 
 ---
 
-## 📝 Notes
-
-### Security Considerations
-1. **Never** transmit full credentials over public channels
-2. **Always** use HTTPS in production
-3. **Always** validate and sanitize user input
-4. **Regularly** rotate JWT secrets
-5. **Monitor** rate limiting for abuse patterns
-6. **Audit** all credential issuance events
-
-### Performance Optimization
-- Use Redis for session management at scale
-- Implement credential caching with TTL
-- Use CDN for QR code and static assets
-- Batch verify operations with pagination
-
-### Future Enhancements
+## 💡 Future Enhancements
 - Revocation mechanism for issued credentials
 - Multiple issuer support
 - Batch credential issuance
@@ -523,20 +752,151 @@ MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/dbname
 
 ---
 
-## 📄 License
+## 💡 What I Would Improve With More Time
 
-MIT License - See LICENSE file for details
+### **1. Advanced Security Features**
+- **Credential Revocation**: Issuer can instantly revoke credentials (add revocation registry)
+- **Attribute-Based Encryption**: Encrypt claims with attribute predicates (decrypt only if conditions met)
+- **Zero-Knowledge Proofs**: Prove field values meet conditions WITHOUT revealing actual value
+  - Example: "Is age > 18?" → Prove true without showing actual age
+- **Decentralized Identity (DIDs)**: W3C DID standard for self-sovereign identity
+- **Blockchain Integration**: Immutable timestamp registry on Ethereum/Polygon
+
+### **2. Performance Optimizations**
+- **Redis Caching Layer**: Cache Merkle proofs for frequently shared credentials
+  - Reduce database queries by 70%
+  - Verification response time: 100ms → 10ms
+- **Database Indexing**: Add indexes on `email`, `shareToken`, `userId` 
+- **Connection Pooling**: Current pool of 5, increase to 50 for scale
+- **GraphQL API**: Replace REST with GraphQL for flexible queries
+  - Example: Query only name field without fetching entire credential
+- **CDN for Static Assets**: Vercel already handles this
+
+### **3. Scalability & Infrastructure**
+- **Microservices Architecture**: Separate auth, verification, credential services
+- **Message Queue (RabbitMQ)**: Decouple services with async messaging
+  - Verification requests → Queue → Async processing
+- **Multi-Region Deployment**: Database replicas in US, EU, Asia
+- **Kubernetes (K8s)**: Auto-scaling based on verification load
+- **API Gateway**: Rate limiting, request validation at edge
+
+### **4. Enhanced User Experience**
+- **Mobile App**: React Native for iOS/Android
+- **Dashboard Analytics**: Track who viewed your credentials
+  - Graph: Views over time
+  - Geographic heatmap: Where verifications happen
+- **Batch Issuance**: Upload CSV with 1000+ credentials
+- **Credential Marketplace**: Buy/sell verifiable credentials securely
+- **Dark Mode**: Toggle light/dark theme
+- **Multi-language Support**: i18n for global users
+
+### **5. Enterprise Features**
+- **Role-Based Access Control (RBAC)**: Admin, issuer, verifier roles
+- **Organizational Accounts**: Multi-user organizations with teams
+- **White-Label Solution**: Custom branding, domains for enterprises
+- **SLA & Support**: 99.9% uptime guarantee with 24/7 support
+- **Custom Integrations**: Zapier, IFTTT, Slack notifications
+  - Example: "Alert me when my credential is verified"
+
+### **6. Compliance & Standards**
+- **W3C Verifiable Credentials**: Full compliance with VC data model
+  - Support JSON-LD context
+  - Full JWT presentation format
+- **ISO/IEC 27001**: Certification for information security
+- **GDPR Compliance**: 
+  - Right to be forgotten (delete all data)
+  - Data portability export
+- **HIPAA for Healthcare**: HIPAA-compliant credential sharing
+- **Audit Logging**: Complete immutable audit trail for compliance
+
+### **7. Advanced Analytics & Monitoring**
+- **Real-time Dashboard**: 
+  - Active credentials count
+  - Verification rate (per second)
+  - Average trust score
+- **Anomaly Detection**: 
+  - Alert on unusual patterns (100 verifications from same IP)
+  - Detect credential harvesting attempts
+- **Security Monitoring**: 
+  - Failed verification attempts
+  - Suspicious IP addresses
+  - Token reuse attempts
+- **Performance Metrics**: 
+  - Verification latency (p50, p95, p99)
+  - Database query times
+  - API error rates
+
+### **8. Integration & API Ecosystem**
+- **OAuth2/OIDC**: Login with credentials from other providers
+- **Webhook Support**: Send events to external systems
+  - `credential.issued` → POST to external API
+  - `credential.shared` → Webhook to analytics
+- **REST v2 API**: Versioned for backward compatibility
+- **Rate Limiting Tiers**: Free (100/hour), Pro (10k/hour), Enterprise (unlimited)
+
+### **9. Advanced Cryptography**
+- **Post-Quantum Cryptography**: Prepare for quantum threat
+  - Switch from EdDSA to CRYSTALS-Dilithium
+- **Homomorphic Encryption**: Compute on encrypted data without decryption
+  - Verify credential validity without seeing values
+- **Multi-Signature**: Multiple issuers sign single credential
+  - Example: University + Government co-issue degree
+
+### **10. Educational & Compliance Tools**
+- **Credential Templates**: Pre-defined schemas for:
+  - University Degrees
+  - Professional Certifications  
+  - Employment Records
+  - Medical Licenses
+- **Policy Management**: Define who can share what
+- **Expiration Management**: Auto-renew credentials
+- **Batch Operations**: Issue/revoke 1000+ credentials in one call
 
 ---
 
-## 👨‍💻 Support
+### Priority Roadmap (If Continued)
 
-For issues, questions, or contributions:
-1. Check the troubleshooting section
-2. Review API documentation
-3. Check browser console for errors
-4. Enable debug logs: `DEBUG=*`
+| Quarter | Focus | Impact |
+|---------|-------|--------|
+| **Q3 2024** | Credential revocation + Redis caching | Reduce verification time 10x, enable revocation |
+| **Q4 2024** | Blockchain integration + Zero-knowledge proofs | Enterprise security, privacy guarantees |
+| **Q1 2025** | Mobile app + 2FA | iOS/Android deployment, 2FA security |
+| **Q2 2025** | Marketplace + analytics dashboard | Revenue model, usage insights |
+| **Q3 2025** | GDPR/ISO compliance + Enterprise support | Regulatory compliance, enterprise sales |
 
 ---
 
-**Built with ❤️ for secure credential sharing**
+## 📊 Technical Debt & Known Limitations
+
+### Current Limitations
+1. **Mock Face Authentication**: Currently simulates Aadhaar face matching
+   - **Solution**: Integrate real biometric APIs (NIST FRVT)
+   
+2. **In-Memory Rate Limiting**: Resets on server restart
+   - **Solution**: Use Redis for persistent rate limiting
+   
+3. **Single Database Connection**: Not optimized for high concurrency
+   - **Solution**: Connection pooling, read replicas
+
+4. **No Credential Revocation**: Can't invalidate issued credentials
+   - **Solution**: Add revocation registry on blockchain
+
+5. **No Offline Verification**: Requires internet to verify
+   - **Solution**: Cache merkle root on client, verify locally
+
+---
+
+## 🔗 Important Links
+
+| Link | Purpose |
+|------|---------|
+| **🚀 [Live Demo](https://secure-credential-share.vercel.app)** | Full working application |
+| **👤 [Face Authentication](https://secure-credential-share.vercel.app/auth/face-verify)** | Biometric verification feature |
+| **📱 [Dashboard](https://secure-credential-share.vercel.app/dashboard)** | User credentials management |
+| **🔐 [Verify Page](https://secure-credential-share.vercel.app/verify)** | Public credential verification |
+| **📖 [API Documentation](https://github.com/yourusername/secure-credential-share#-api-documentation)** | Detailed API endpoints |
+| **🐳 [Deployment Guide](DEPLOYMENT.md)** | Deploy to Vercel, Railway, AWS |
+| **✨ [Bonus Features](BONUS_FEATURES.md)** | EdDSA, QR codes, Face auth details |
+| **🧪 [Testing Guide](TESTING.md)** | Pre-deployment testing checklist |
+
+---
