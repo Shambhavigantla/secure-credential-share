@@ -4,6 +4,75 @@ import Credential from '@/models/Credential';
 import { withRateLimit } from '@/lib/middleware';
 import { verifySelectivePresentation, getMerkleRoot } from '@/lib/selective-disclosure';
 
+/**
+ * Build field-level trust indicators for each disclosed field
+ */
+function buildFieldLevelTrust(
+  shareRecord: any,
+  credential: any,
+  disclosedFields: any[]
+): Record<string, any> {
+  const fieldTrust: Record<string, any> = {};
+
+  disclosedFields.forEach((field) => {
+    const originalCommitment = credential.commitments.find(
+      (c: any) => c.field === field.field
+    );
+
+    // Calculate per-field trust score
+    let fieldScore = 100;
+
+    // Check hash integrity
+    const hashMatch = originalCommitment?.hash === field.hash;
+    if (!hashMatch) fieldScore -= 50;
+
+    // Check salt integrity
+    const saltMatch = originalCommitment?.salt === field.salt;
+    if (!saltMatch) fieldScore -= 25;
+
+    // Check value integrity
+    const valueMatch = JSON.stringify(credential.claims[field.field]) === 
+                       JSON.stringify(field.value);
+    if (!valueMatch) fieldScore -= 20;
+
+    // Check expiry status
+    const isExpired = shareRecord?.expiresAt && new Date() > shareRecord.expiresAt;
+    if (isExpired) fieldScore -= 100;
+
+    // Check age of credential (older = slightly lower trust)
+    const credentialAge = Date.now() - new Date(credential.issuedAt).getTime();
+    const ageInDays = credentialAge / (1000 * 60 * 60 * 24);
+    if (ageInDays > 365) fieldScore -= 5;
+    if (ageInDays > 730) fieldScore -= 10;
+
+    // Determine trust level
+    let trustLevel = 'Unknown';
+    if (fieldScore >= 95) trustLevel = 'Critical';
+    else if (fieldScore >= 85) trustLevel = 'High';
+    else if (fieldScore >= 70) trustLevel = 'Medium';
+    else if (fieldScore >= 50) trustLevel = 'Low';
+    else trustLevel = 'Failed';
+
+    fieldTrust[field.field] = {
+      trustScore: Math.max(0, Math.min(100, fieldScore)),
+      trustLevel,
+      integrityChecks: {
+        hashVerified: hashMatch,
+        saltVerified: saltMatch,
+        valueVerified: valueMatch,
+        notExpired: !isExpired,
+        credentialAge: `${Math.floor(ageInDays)} days`,
+      },
+      dataType: typeof credential.claims[field.field],
+      dataSize: JSON.stringify(field.value).length,
+      lastModified: credential.updatedAt,
+    };
+  });
+
+  return fieldTrust;
+}
+
+
 // This endpoint is rate-limited but does NOT require auth (public verification)
 async function handler(request: NextRequest) {
   try {
@@ -85,7 +154,14 @@ async function handler(request: NextRequest) {
       credential.merkleTree
     );
 
-    // Add additional metadata
+    // Build field-level trust indicators
+    const fieldLevelTrust = buildFieldLevelTrust(
+      shareRecord,
+      credential,
+      presentation.disclosedFields
+    );
+
+    // Add comprehensive audit trail
     const result = {
       ...verificationResult,
       issuerName: credential.issuerName,
@@ -93,6 +169,19 @@ async function handler(request: NextRequest) {
       credentialTitle: credential.title,
       viewCount: shareRecord?.viewCount || 0,
       lastViewedAt: shareRecord?.lastViewedAt,
+      fieldLevelTrust,
+      auditTrail: {
+        verifiedAt: new Date().toISOString(),
+        sharingDuration: shareRecord?.expiresAt 
+          ? Math.ceil((new Date(shareRecord.expiresAt).getTime() - new Date(shareRecord.createdAt).getTime()) / 1000)
+          : null,
+        timeRemaining: shareRecord?.expiresAt
+          ? Math.max(0, Math.ceil((new Date(shareRecord.expiresAt).getTime() - new Date().getTime()) / 1000))
+          : null,
+        totalViews: shareRecord?.viewCount || 0,
+        issuerName: credential.issuerName,
+        issuerPublicKey: credential.issuerPublicKey,
+      },
     };
 
     return NextResponse.json(result, { status: 200 });

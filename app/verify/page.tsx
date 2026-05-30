@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import axios from 'axios';
 import { CheckCircle, XCircle, AlertCircle, Clock } from 'lucide-react';
@@ -16,9 +16,30 @@ interface VerificationResult {
   credentialTitle?: string;
   viewCount?: number;
   lastViewedAt?: string;
+  fieldLevelTrust?: Record<string, {
+    trustScore: number;
+    trustLevel: string;
+    integrityChecks: {
+      hashVerified: boolean;
+      saltVerified: boolean;
+      valueVerified: boolean;
+      notExpired: boolean;
+      credentialAge: string;
+    };
+    dataType: string;
+    dataSize: number;
+  }>;
+  auditTrail?: {
+    verifiedAt: string;
+    sharingDuration: number | null;
+    timeRemaining: number | null;
+    totalViews: number;
+    issuerName: string;
+    issuerPublicKey: string;
+  };
 }
 
-export default function VerifyPage() {
+function VerifyContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
 
@@ -225,18 +246,135 @@ export default function VerifyPage() {
           <div className="bg-white rounded-lg shadow-md p-8">
             <h2 className="text-xl font-semibold text-gray-900 mb-6">Shared Information</h2>
             <div className="grid gap-4">
-              {Object.entries(result.disclosedData).map(([key, value]) => (
-                <div
-                  key={key}
-                  className="flex justify-between items-center p-4 bg-gray-50 rounded-lg border border-gray-200"
-                >
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-600">{key}</p>
-                    <p className="text-lg text-gray-900 font-semibold">{String(value)}</p>
+              {Object.entries(result.disclosedData).map(([key, value]) => {
+                const fieldTrust = result.fieldLevelTrust?.[key];
+                const getTrustColor = (score: number) => {
+                  if (score >= 95) return 'bg-green-100 border-green-300';
+                  if (score >= 85) return 'bg-blue-100 border-blue-300';
+                  if (score >= 70) return 'bg-yellow-100 border-yellow-300';
+                  if (score >= 50) return 'bg-orange-100 border-orange-300';
+                  return 'bg-red-100 border-red-300';
+                };
+
+                const getTrustBadgeColor = (level: string) => {
+                  switch (level) {
+                    case 'Critical': return 'bg-green-600 text-white';
+                    case 'High': return 'bg-blue-600 text-white';
+                    case 'Medium': return 'bg-yellow-600 text-white';
+                    case 'Low': return 'bg-orange-600 text-white';
+                    default: return 'bg-red-600 text-white';
+                  }
+                };
+
+                return (
+                  <div
+                    key={key}
+                    className={`p-4 rounded-lg border-2 ${getTrustColor(fieldTrust?.trustScore || 100)}`}
+                  >
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-gray-600">{key}</p>
+                        <p className="text-lg text-gray-900 font-semibold">{String(value)}</p>
+                      </div>
+                      <div className="flex gap-2 ml-4">
+                        <div className="text-right">
+                          {fieldTrust && (
+                            <>
+                              <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getTrustBadgeColor(fieldTrust.trustLevel)}`}>
+                                {fieldTrust.trustLevel}
+                              </span>
+                              <p className="text-sm font-bold text-gray-900 mt-2">
+                                {fieldTrust.trustScore}%
+                              </p>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Field-level integrity checks */}
+                    {fieldTrust && (
+                      <div className="mt-3 pt-3 border-t border-gray-300">
+                        <p className="text-xs font-semibold text-gray-700 mb-2">Integrity Checks:</p>
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          <div className="flex items-center gap-1">
+                            {fieldTrust.integrityChecks.hashVerified ? (
+                              <span className="w-4 h-4 rounded-full bg-green-500" />
+                            ) : (
+                              <span className="w-4 h-4 rounded-full bg-red-500" />
+                            )}
+                            <span className="text-gray-700">Hash Verified</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            {fieldTrust.integrityChecks.saltVerified ? (
+                              <span className="w-4 h-4 rounded-full bg-green-500" />
+                            ) : (
+                              <span className="w-4 h-4 rounded-full bg-red-500" />
+                            )}
+                            <span className="text-gray-700">Salt Verified</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            {fieldTrust.integrityChecks.valueVerified ? (
+                              <span className="w-4 h-4 rounded-full bg-green-500" />
+                            ) : (
+                              <span className="w-4 h-4 rounded-full bg-red-500" />
+                            )}
+                            <span className="text-gray-700">Value Verified</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            {fieldTrust.integrityChecks.notExpired ? (
+                              <span className="w-4 h-4 rounded-full bg-green-500" />
+                            ) : (
+                              <span className="w-4 h-4 rounded-full bg-red-500" />
+                            )}
+                            <span className="text-gray-700">Not Expired</span>
+                          </div>
+                        </div>
+                        <p className="text-xs text-gray-600 mt-2">
+                          Age: {fieldTrust.integrityChecks.credentialAge}
+                        </p>
+                      </div>
+                    )}
                   </div>
-                  <CheckCircle className="w-6 h-6 text-green-600 flex-shrink-0 ml-4" />
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Audit Trail */}
+        {result.auditTrail && (
+          <div className="bg-white rounded-lg shadow-md p-8 mt-8">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Audit Trail</h2>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Issuer</p>
+                <p className="text-gray-900">{result.auditTrail.issuerName}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total Views</p>
+                <p className="text-gray-900">{result.auditTrail.totalViews}</p>
+              </div>
+              {result.auditTrail.sharingDuration && (
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Share Duration</p>
+                  <p className="text-gray-900">{result.auditTrail.sharingDuration} seconds</p>
                 </div>
-              ))}
+              )}
+              {result.auditTrail.timeRemaining !== null && (
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Time Remaining</p>
+                  <p className={result.auditTrail.timeRemaining > 0 ? 'text-green-700' : 'text-red-700'}>
+                    {result.auditTrail.timeRemaining > 0 
+                      ? `${Math.floor(result.auditTrail.timeRemaining / 3600)} hours` 
+                      : 'Expired'}
+                  </p>
+                </div>
+              )}
+            </div>
+            <div className="mt-4 p-3 bg-gray-100 rounded text-xs font-mono break-all">
+              <p className="text-gray-600 mb-1">Issuer Public Key:</p>
+              <p className="text-gray-900">{result.auditTrail.issuerPublicKey}</p>
             </div>
           </div>
         )}
@@ -249,5 +387,22 @@ export default function VerifyPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function VerifyPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin mb-4">
+            <Clock className="w-12 h-12 text-blue-600 mx-auto" />
+          </div>
+          <p className="text-gray-600 text-lg">Loading verification...</p>
+        </div>
+      </div>
+    }>
+      <VerifyContent />
+    </Suspense>
   );
 }
