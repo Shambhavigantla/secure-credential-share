@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:8.0
+    container_name: secure-credentials-db
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_DATABASE: secure-credential-share
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - secure-cred-network
+
+  # Next.js Application
+  app:
+    build: .
+    container_name: secure-credentials-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      # Database
+      MONGODB_URI: mongodb://mongodb:27017/secure-credential-share
+
+      # JWT Configuration
+      JWT_SECRET: ${JWT_SECRET:-your-secret-key-min-32-characters-long-12345678}
+      JWT_EXPIRY: 7d
+      RATE_LIMIT_WINDOW_MS: 900000
+      RATE_LIMIT_MAX_REQUESTS: 100
+
+      # Issuer Configuration
+      ISSUER_NAME: ${ISSUER_NAME:-Secure Credentials Issuer}
+      ISSUER_PRIVATE_KEY: ${ISSUER_PRIVATE_KEY:-}
+      ISSUER_PUBLIC_KEY: ${ISSUER_PUBLIC_KEY:-}
+
+      # Application URLs
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      NODE_ENV: production
+      NEXT_TELEMETRY_DISABLED: 1
+
+    depends_on:
+      - mongodb
+    networks:
+      - secure-cred-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  secure-cred-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+    driver: local
