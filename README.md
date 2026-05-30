@@ -38,7 +38,6 @@ A production-grade platform for issuing, managing, and selectively disclosing di
 ### Project Structure
 ```
 secure-credential-share/
-├── src/
 │   ├── app/
 │   │   ├── api/                          # Backend API routes
 │   │   │   ├── auth/
