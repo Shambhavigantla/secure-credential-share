@@ -188,13 +188,13 @@ export default function ShareCredentialPage() {
 
             {/* Link */}
             <div className="bg-gray-50 p-4 rounded-lg mb-6">
-              <p className="text-sm font-medium text-gray-700 mb-2">Verifiable Link:</p>
+              <p className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-900">Verifiable Link:</p>
               <div className="flex gap-2">
                 <input
                   type="text"
                   readOnly
                   value={shareResult.verifiableLink}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg bg-white font-mono text-sm"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-900"
                 />
                 <button
                   onClick={handleCopyLink}
@@ -210,7 +210,7 @@ export default function ShareCredentialPage() {
             <div className="grid grid-cols-2 gap-4">
               <button
                 onClick={handleDownloadQR}
-                className="py-2 px-4 border border-gray-300 hover:bg-gray-50 rounded-lg transition flex items-center justify-center gap-2"
+                className="py-2 px-4 border border-gray-300 hover:bg-gray-50 rounded-lg transition flex items-center justify-center gap-2 text-gray-900 font-semibold"
               >
                 <Download size={18} />
                 Download QR
@@ -319,7 +319,7 @@ export default function ShareCredentialPage() {
             <select
               value={expiresInMinutes}
               onChange={e => setExpiresInMinutes(parseInt(e.target.value))}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-900"
             >
               <option value={60}>1 hour</option>
               <option value={480}>8 hours</option>

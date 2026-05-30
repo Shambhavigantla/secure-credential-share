@@ -139,7 +139,7 @@ export default function IssueCredentialPage() {
                 onChange={handleTitleChange}
                 required
                 placeholder="e.g., Bachelor of Science Degree"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-900"
               />
             </div>
 
@@ -153,7 +153,7 @@ export default function IssueCredentialPage() {
                 value={formData.issuerName}
                 onChange={handleIssuerChange}
                 placeholder="e.g., University of Technology"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-900"
               />
             </div>
 
@@ -168,7 +168,7 @@ export default function IssueCredentialPage() {
                 onChange={handleExpiryChange}
                 min="1"
                 max="3650"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-900"
               />
             </div>
 
@@ -185,14 +185,14 @@ export default function IssueCredentialPage() {
                       placeholder="Field name (e.g., name)"
                       value={field.key}
                       onChange={e => handleFieldChange(index, 'key', e.target.value)}
-                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-900"
                     />
                     <input
                       type="text"
                       placeholder="Field value"
                       value={field.value}
                       onChange={e => handleFieldChange(index, 'value', e.target.value)}
-                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-900"
                     />
                     {formData.fields.length > 1 && (
                       <button
