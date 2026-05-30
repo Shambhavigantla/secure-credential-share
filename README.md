@@ -742,15 +742,6 @@ mongosh
 
 ---
 
-## 💡 Future Enhancements
-- Revocation mechanism for issued credentials
-- Multiple issuer support
-- Batch credential issuance
-- Offline verification (with cached root)
-- OIDC/OAuth2 integration
-- Biometric authentication for holders
-
----
 
 ## 💡 What I Would Improve With More Time
 
@@ -851,38 +842,6 @@ mongosh
 - **Policy Management**: Define who can share what
 - **Expiration Management**: Auto-renew credentials
 - **Batch Operations**: Issue/revoke 1000+ credentials in one call
-
----
-
-### Priority Roadmap (If Continued)
-
-| Quarter | Focus | Impact |
-|---------|-------|--------|
-| **Q3 2024** | Credential revocation + Redis caching | Reduce verification time 10x, enable revocation |
-| **Q4 2024** | Blockchain integration + Zero-knowledge proofs | Enterprise security, privacy guarantees |
-| **Q1 2025** | Mobile app + 2FA | iOS/Android deployment, 2FA security |
-| **Q2 2025** | Marketplace + analytics dashboard | Revenue model, usage insights |
-| **Q3 2025** | GDPR/ISO compliance + Enterprise support | Regulatory compliance, enterprise sales |
-
----
-
-## 📊 Technical Debt & Known Limitations
-
-### Current Limitations
-1. **Mock Face Authentication**: Currently simulates Aadhaar face matching
-   - **Solution**: Integrate real biometric APIs (NIST FRVT)
-   
-2. **In-Memory Rate Limiting**: Resets on server restart
-   - **Solution**: Use Redis for persistent rate limiting
-   
-3. **Single Database Connection**: Not optimized for high concurrency
-   - **Solution**: Connection pooling, read replicas
-
-4. **No Credential Revocation**: Can't invalidate issued credentials
-   - **Solution**: Add revocation registry on blockchain
-
-5. **No Offline Verification**: Requires internet to verify
-   - **Solution**: Cache merkle root on client, verify locally
 
 ---
 
