@@ -745,7 +745,7 @@ mongosh
 
 ## 💡 What I Would Improve With More Time
 
-### **1. Advanced Security Features**
+### ** Advanced Security Features**
 - **Credential Revocation**: Issuer can instantly revoke credentials (add revocation registry)
 - **Attribute-Based Encryption**: Encrypt claims with attribute predicates (decrypt only if conditions met)
 - **Zero-Knowledge Proofs**: Prove field values meet conditions WITHOUT revealing actual value
@@ -753,17 +753,7 @@ mongosh
 - **Decentralized Identity (DIDs)**: W3C DID standard for self-sovereign identity
 - **Blockchain Integration**: Immutable timestamp registry on Ethereum/Polygon
 
-### **2. Performance Optimizations**
-- **Redis Caching Layer**: Cache Merkle proofs for frequently shared credentials
-  - Reduce database queries by 70%
-  - Verification response time: 100ms → 10ms
-- **Database Indexing**: Add indexes on `email`, `shareToken`, `userId` 
-- **Connection Pooling**: Current pool of 5, increase to 50 for scale
-- **GraphQL API**: Replace REST with GraphQL for flexible queries
-  - Example: Query only name field without fetching entire credential
-- **CDN for Static Assets**: Vercel already handles this
-
-### **3. Scalability & Infrastructure**
+### ** Scalability & Infrastructure**
 - **Microservices Architecture**: Separate auth, verification, credential services
 - **Message Queue (RabbitMQ)**: Decouple services with async messaging
   - Verification requests → Queue → Async processing
@@ -771,7 +761,7 @@ mongosh
 - **Kubernetes (K8s)**: Auto-scaling based on verification load
 - **API Gateway**: Rate limiting, request validation at edge
 
-### **4. Enhanced User Experience**
+### ** Enhanced User Experience**
 - **Mobile App**: React Native for iOS/Android
 - **Dashboard Analytics**: Track who viewed your credentials
   - Graph: Views over time
@@ -781,7 +771,7 @@ mongosh
 - **Dark Mode**: Toggle light/dark theme
 - **Multi-language Support**: i18n for global users
 
-### **5. Enterprise Features**
+### **Enterprise Features**
 - **Role-Based Access Control (RBAC)**: Admin, issuer, verifier roles
 - **Organizational Accounts**: Multi-user organizations with teams
 - **White-Label Solution**: Custom branding, domains for enterprises
@@ -789,18 +779,7 @@ mongosh
 - **Custom Integrations**: Zapier, IFTTT, Slack notifications
   - Example: "Alert me when my credential is verified"
 
-### **6. Compliance & Standards**
-- **W3C Verifiable Credentials**: Full compliance with VC data model
-  - Support JSON-LD context
-  - Full JWT presentation format
-- **ISO/IEC 27001**: Certification for information security
-- **GDPR Compliance**: 
-  - Right to be forgotten (delete all data)
-  - Data portability export
-- **HIPAA for Healthcare**: HIPAA-compliant credential sharing
-- **Audit Logging**: Complete immutable audit trail for compliance
-
-### **7. Advanced Analytics & Monitoring**
+### ** Advanced Analytics & Monitoring**
 - **Real-time Dashboard**: 
   - Active credentials count
   - Verification rate (per second)
@@ -817,7 +796,7 @@ mongosh
   - Database query times
   - API error rates
 
-### **8. Integration & API Ecosystem**
+### ** Integration & API Ecosystem**
 - **OAuth2/OIDC**: Login with credentials from other providers
 - **Webhook Support**: Send events to external systems
   - `credential.issued` → POST to external API
@@ -825,7 +804,7 @@ mongosh
 - **REST v2 API**: Versioned for backward compatibility
 - **Rate Limiting Tiers**: Free (100/hour), Pro (10k/hour), Enterprise (unlimited)
 
-### **9. Advanced Cryptography**
+### ** Advanced Cryptography**
 - **Post-Quantum Cryptography**: Prepare for quantum threat
   - Switch from EdDSA to CRYSTALS-Dilithium
 - **Homomorphic Encryption**: Compute on encrypted data without decryption
@@ -833,15 +812,6 @@ mongosh
 - **Multi-Signature**: Multiple issuers sign single credential
   - Example: University + Government co-issue degree
 
-### **10. Educational & Compliance Tools**
-- **Credential Templates**: Pre-defined schemas for:
-  - University Degrees
-  - Professional Certifications  
-  - Employment Records
-  - Medical Licenses
-- **Policy Management**: Define who can share what
-- **Expiration Management**: Auto-renew credentials
-- **Batch Operations**: Issue/revoke 1000+ credentials in one call
 
 ---
 
